@@ -1,0 +1,44 @@
+@Exo.WebApi_HostAddress = http://localhost:5000
+
+### 1. Listar todos os Projetos (GET)
+GET {{Exo.WebApi_HostAddress}}/api/projetos
+Accept: application/json
+
+###
+
+### 2. Buscar Projeto por ID (GET)
+GET {{Exo.WebApi_HostAddress}}/api/projetos/1
+Accept: application/json
+
+###
+
+### 3. Cadastrar novo Projeto (POST)
+POST {{Exo.WebApi_HostAddress}}/api/projetos
+Content-Type: application/json
+
+{
+  "nomeDoProjeto": "Sistema de Gestão de Frotas Elétricas",
+  "area": "Transporte Sustentável",
+  "status": true
+}
+
+###
+
+### 4. Atualizar Projeto existente (PUT)
+PUT {{Exo.WebApi_HostAddress}}/api/projetos/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "nomeDoProjeto": "Portal Educacional Conectado - Versão 2.0",
+  "area": "Tecnologia e Inovação",
+  "status": true
+}
+
+###
+
+### 5. Deletar Projeto por ID (DELETE)
+DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
+Accept: application/json
+
+###
