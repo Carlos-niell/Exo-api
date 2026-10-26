@@ -1,3 +1,4 @@
+using Exo.WebApi.Interfaces;
 using Exo.WebApi.Models;
 using Exo.WebApi.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -9,9 +10,9 @@ namespace Exo.WebApi.Controllers
     [ApiController]
     public class ProjetosController : ControllerBase
     {
-        private readonly ProjetoRepository _projetoRepository;
+        private readonly IProjetoRepository _projetoRepository;
 
-        public ProjetosController(ProjetoRepository projetoRepository)
+        public ProjetosController(IProjetoRepository projetoRepository)
         {
             _projetoRepository = projetoRepository;
         }

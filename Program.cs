@@ -1,4 +1,5 @@
 using Exo.WebApi.Contexts;
+using Exo.WebApi.Interfaces;
 using Exo.WebApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -15,7 +16,8 @@ builder.Services.AddDbContext<ExoContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
-// 2. Injeção de Dependência da Camada de Repositório
+// 2. Injeção de Dependência da Camada de Repositório (Interface e Implementação)
+builder.Services.AddTransient<IProjetoRepository, ProjetoRepository>();
 builder.Services.AddTransient<ProjetoRepository>();
 
 // 3. Configuração dos Controladores

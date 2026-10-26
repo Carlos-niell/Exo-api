@@ -1,6 +1,6 @@
 # 🚀 Exo.WebApi - Gerenciamento de Projetos
 
-Projeto desenvolvido para a atividade prática do curso técnico do **SENAI**, com foco na criação de uma API RESTful completa em **C# / ASP.NET Core** utilizando arquitetura em camadas e integração com banco de dados relacional **SQL Server** através do **Entity Framework Core**.
+Projeto desenvolvido para a atividade prática do curso do **SENAI**, com foco na criação de uma API RESTful completa em **C# / ASP.NET Core** utilizando arquitetura em camadas e integração com banco de dados relacional **SQL Server** através do **Entity Framework Core**.
 
 ---
 
@@ -37,6 +37,8 @@ O projeto foi estruturado seguindo as melhores práticas de desenvolvimento e se
 Projeto-ExoApi/
 ├── Controllers/
 │   └── ProjetosController.cs       # Camada de Apresentação / Controladores REST
+├── Interfaces/
+│   └── IProjetoRepository.cs       # Camada de Contratos / Abstrações
 ├── Models/
 │   └── Projeto.cs                  # Camada de Domínio / Entidades
 ├── Contexts/
@@ -53,6 +55,7 @@ Projeto-ExoApi/
 └── Program.cs                      # Ponto de Entrada, Injeção de Dependências e Pipeline
 ```
 
+- **Interfaces**: Define os contratos (abstrações) para desacoplamento e inversão de controle.
 - **Models**: Contém as entidades de dados do sistema, com anotações de validação (`Data Annotations`).
 - **Contexts**: Configuração da sessão do Entity Framework Core (`DbContext`) e mapeamento relacional.
 - **Repositories**: Encapsula as operações de banco de dados (CRUD), desacoplando a regra de negócio e persistência dos controladores.
