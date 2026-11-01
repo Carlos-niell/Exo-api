@@ -1,0 +1,338 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+		"name": "ExoApi - SENAI (Projetos)",
+		"description": "Coleção completa de testes para a API ExoApi no Postman, contendo fluxos de sucesso (200, 201) e testes de erro/exceção (400, 404, 409, 500).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🟢 Cenários de Sucesso",
+			"item": [
+				{
+					"name": "1. Listar todos os Projetos (GET 200)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "Retorna todos os projetos cadastrados com resposta padronizada ApiResponse."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Buscar Projeto por ID (GET 200)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "Busca um projeto existente pelo seu ID."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Cadastrar novo Projeto (POST 201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nomeDoProjeto\": \"Sistema de Gestão de Frotas Elétricas\",\n  \"area\": \"Transporte Sustentável\",\n  \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "Cadastra um novo projeto e retorna 201 Created."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Atualizar Projeto existente (PUT 200)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"nomeDoProjeto\": \"Portal Educacional Conectado - Versão 2.0\",\n  \"area\": \"Tecnologia e Inovação\",\n  \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "Atualiza os dados de um projeto existente com status 200 OK."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Deletar Projeto por ID (DELETE 200)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"3"
+							]
+						},
+						"description": "Remove um projeto pelo ID retornando 200 OK."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔴 Cenários de Erro e Exceções",
+			"item": [
+				{
+					"name": "1. Erro 400 - Campos Obrigatórios Vazios",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nomeDoProjeto\": \"\",\n  \"area\": \"\",\n  \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "Validação de ModelState: retorna 400 Bad Request se os campos obrigatórios estiverem vazios."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Erro 400 - ID Inválido na URL (<= 0)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"0"
+							]
+						},
+						"description": "Retorna 400 Bad Request ao passar ID menor ou igual a zero."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Erro 400 - Divergência de ID entre URL e Body",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 2,\n  \"nomeDoProjeto\": \"Nome Divergente\",\n  \"area\": \"Área\",\n  \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "Retorna 400 Bad Request se o ID da URL (1) for diferente do ID do JSON (2)."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Erro 404 - Exceção Projeto Não Encontrado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"9999"
+							]
+						},
+						"description": "Testa a exceção ProjetoNaoEncontradoException retornando 404 Not Found."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Erro 409 - Exceção Projeto Duplicado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nomeDoProjeto\": \"Portal Educacional Conectado\",\n  \"area\": \"Educação e Tecnologia\",\n  \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "Testa a exceção ProjetoDuplicadoException retornando 409 Conflict."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}

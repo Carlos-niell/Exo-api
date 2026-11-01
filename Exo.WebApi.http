@@ -1,18 +1,22 @@
 @Exo.WebApi_HostAddress = http://localhost:5000
 
-### 1. Listar todos os Projetos (GET)
+###############################################################################
+### CENÁRIOS DE SUCESSO (Mensagens Padronizadas e Status HTTP Adequados)
+###############################################################################
+
+### 1. Listar todos os Projetos (GET) -> 200 OK
 GET {{Exo.WebApi_HostAddress}}/api/projetos
 Accept: application/json
 
 ###
 
-### 2. Buscar Projeto por ID (GET)
+### 2. Buscar Projeto por ID (GET) -> 200 OK
 GET {{Exo.WebApi_HostAddress}}/api/projetos/1
 Accept: application/json
 
 ###
 
-### 3. Cadastrar novo Projeto (POST)
+### 3. Cadastrar novo Projeto (POST) -> 201 Created
 POST {{Exo.WebApi_HostAddress}}/api/projetos
 Content-Type: application/json
 
@@ -24,7 +28,7 @@ Content-Type: application/json
 
 ###
 
-### 4. Atualizar Projeto existente (PUT)
+### 4. Atualizar Projeto existente (PUT) -> 200 OK
 PUT {{Exo.WebApi_HostAddress}}/api/projetos/1
 Content-Type: application/json
 
@@ -37,8 +41,64 @@ Content-Type: application/json
 
 ###
 
-### 5. Deletar Projeto por ID (DELETE)
+### 5. Deletar Projeto por ID (DELETE) -> 200 OK
 DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
 Accept: application/json
+
+###
+
+
+###############################################################################
+### CENÁRIOS DE ERRO E EXCEÇÃO (Códigos HTTP e Tratamentos Específicos)
+###############################################################################
+
+### ERRO 1 (HTTP 400 Bad Request) - Dados Inválidos (Campos Obrigatórios Ausentes)
+POST {{Exo.WebApi_HostAddress}}/api/projetos
+Content-Type: application/json
+
+{
+  "nomeDoProjeto": "",
+  "area": "",
+  "status": true
+}
+
+###
+
+### ERRO 2 (HTTP 400 Bad Request) - ID Inválido na URL (Menor ou igual a zero)
+GET {{Exo.WebApi_HostAddress}}/api/projetos/0
+Accept: application/json
+
+###
+
+### ERRO 3 (HTTP 400 Bad Request) - Divergência de ID entre URL e Corpo
+PUT {{Exo.WebApi_HostAddress}}/api/projetos/1
+Content-Type: application/json
+
+{
+  "id": 2,
+  "nomeDoProjeto": "Nome Incompatível",
+  "area": "Inovação",
+  "status": true
+}
+
+###
+
+### ERRO 4 (HTTP 404 Not Found) - Exceção ProjetoNaoEncontradoException
+# Busca por ID que não existe no banco de dados
+GET {{Exo.WebApi_HostAddress}}/api/projetos/9999
+Accept: application/json
+
+###
+
+### ERRO 5 (HTTP 409 Conflict) - Exceção ProjetoDuplicadoException
+# Tentativa de cadastrar projeto com nome já existente no sistema
+POST {{Exo.WebApi_HostAddress}}/api/projetos
+Content-Type: application/json
+
+{
+  "nomeDoProjeto": "Portal Educacional Conectado",
+  "area": "Educação e Tecnologia",
+  "status": true
+}
 
 ###

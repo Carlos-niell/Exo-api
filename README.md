@@ -96,19 +96,25 @@ graph TD
 Projeto-ExoApi/
 │
 ├── 📁 Controllers/
-│   └── ProjetosController.cs         # Endpoints REST (GET, POST, PUT, DELETE)
+│   └── ProjetosController.cs         # Endpoints REST com status HTTP semânticos (200, 201, 400, 404, 409, 500)
+│
+├── 📁 Exceptions/
+│   ├── ProjetoNaoEncontradoException.cs # Exceção customizada (Status 404 Not Found)
+│   ├── ProjetoDuplicadoException.cs     # Exceção customizada (Status 409 Conflict)
+│   └── DadosInvalidosException.cs       # Exceção customizada (Status 400 Bad Request)
 │
 ├── 📁 Interfaces/
 │   └── IProjetoRepository.cs         # Contrato com assinaturas dos métodos
 │
 ├── 📁 Models/
-│   └── Projeto.cs                    # Entidade de domínio com Data Annotations
+│   ├── Projeto.cs                    # Entidade de domínio com Data Annotations
+│   └── ApiResponse.cs                # Classes padronizadas ApiResponse<T> e ApiErrorResponse
 │
 ├── 📁 Contexts/
 │   └── ExoContext.cs                 # Contexto de persistência do Entity Framework Core
 │
 ├── 📁 Repositories/
-│   └── ProjetoRepository.cs          # Implementação das regras de CRUD no banco
+│   └── ProjetoRepository.cs          # Implementação das regras de CRUD e lançamento de exceções
 │
 ├── 📁 Scripts/
 │   └── ExoApi_Script.sql             # Script SQL de criação do banco e dados iniciais
@@ -116,11 +122,12 @@ Projeto-ExoApi/
 ├── 📁 Properties/
 │   └── launchSettings.json           # Configuração de portas e ambiente (localhost:5000)
 │
+├── 📄 ExoApi.postman_collection.json # Coleção completa de testes para importação no Postman
+├── 📄 Exo.WebApi.http                # Coleção de testes de requisição HTTP prontos (VS Code)
 ├── 📄 appsettings.json               # Configurações gerais e Connection String do SQL Server
 ├── 📄 appsettings.Development.json   # Configurações específicas de desenvolvimento
 ├── 📄 Program.cs                     # Ponto de entrada, injeção de dependências e pipeline
 ├── 📄 Exo.WebApi.csproj              # Arquivo de dependências e pacotes NuGet do .NET 8
-├── 📄 Exo.WebApi.http                # Coleção de testes de requisição HTTP prontos
 ├── 📄 README.md                      # Documentação completa do projeto
 └── 📄 .gitignore                     # Configuração para ignorar bin/, obj/ e temporários
 ```
@@ -205,11 +212,11 @@ A API será inicializada na porta `5000`:
 
 | Método | Endpoint | Descrição | Status Sucesso | Status Erro |
 |---|---|---|---|---|
-| `GET` | `/api/projetos` | Retorna todos os projetos cadastrados | `200 OK` | `400 Bad Request` |
-| `GET` | `/api/projetos/{id}` | Busca um projeto por identificador | `200 OK` | `404 Not Found` / `400` |
-| `POST` | `/api/projetos` | Cadastra um novo projeto | `201 Created` | `400 Bad Request` |
-| `PUT` | `/api/projetos/{id}` | Atualiza um projeto existente | `204 NoContent` | `404 Not Found` / `400` |
-| `DELETE` | `/api/projetos/{id}` | Remove um projeto pelo ID | `204 NoContent` | `404 Not Found` / `400` |
+| `GET` | `/api/projetos` | Retorna todos os projetos com mensagem padronizada | `200 OK` | `500 Internal Server Error` |
+| `GET` | `/api/projetos/{id}` | Busca um projeto por identificador | `200 OK` | `400 Bad Request`, `404 Not Found`, `500` |
+| `POST` | `/api/projetos` | Cadastra um novo projeto | `201 Created` | `400 Bad Request`, `409 Conflict`, `500` |
+| `PUT` | `/api/projetos/{id}` | Atualiza um projeto existente | `200 OK` | `400 Bad Request`, `404 Not Found`, `409 Conflict`, `500` |
+| `DELETE` | `/api/projetos/{id}` | Remove um projeto pelo ID | `200 OK` | `400 Bad Request`, `404 Not Found`, `500` |
 
 ---
 
@@ -217,28 +224,28 @@ A API será inicializada na porta `5000`:
 - **Método:** `GET`
 - **URL:** `http://localhost:5000/api/projetos`
 - **Status de Sucesso:** `200 OK`
-- **Exemplo de Resposta:**
+- **Exemplo de Resposta Padronizada (`ApiResponse<T>`):**
 ```json
-[
-  {
-    "id": 1,
-    "nomeDoProjeto": "Portal Educacional Conectado",
-    "area": "Educação e Tecnologia",
-    "status": true
-  },
-  {
-    "id": 2,
-    "nomeDoProjeto": "Sistema de Logística Reversa Inteligente",
-    "area": "Sustentabilidade",
-    "status": true
-  },
-  {
-    "id": 3,
-    "nomeDoProjeto": "Automação de Linha de Produção Industrial",
-    "area": "Mecatrônica",
-    "status": false
-  }
-]
+{
+  "sucesso": true,
+  "mensagem": "Projetos listados com sucesso.",
+  "total": 3,
+  "dados": [
+    {
+      "id": 1,
+      "nomeDoProjeto": "Portal Educacional Conectado",
+      "area": "Educação e Tecnologia",
+      "status": true
+    },
+    {
+      "id": 2,
+      "nomeDoProjeto": "Sistema de Logística Reversa Inteligente",
+      "area": "Sustentabilidade",
+      "status": true
+    }
+  ],
+  "dataHora": "2026-11-01T22:00:00Z"
+}
 ```
 
 ---
@@ -247,19 +254,18 @@ A API será inicializada na porta `5000`:
 - **Método:** `GET`
 - **URL:** `http://localhost:5000/api/projetos/1`
 - **Status de Sucesso:** `200 OK`
-- **Exemplo de Resposta:**
+- **Exemplo de Resposta Padronizada (`ApiResponse<T>`):**
 ```json
 {
-  "id": 1,
-  "nomeDoProjeto": "Portal Educacional Conectado",
-  "area": "Educação e Tecnologia",
-  "status": true
-}
-```
-- **Se o ID não existir (`404 Not Found`):**
-```json
-{
-  "mensagem": "Projeto com ID 999 não foi encontrado."
+  "sucesso": true,
+  "mensagem": "Projeto localizado com sucesso.",
+  "dados": {
+    "id": 1,
+    "nomeDoProjeto": "Portal Educacional Conectado",
+    "area": "Educação e Tecnologia",
+    "status": true
+  },
+  "dataHora": "2026-11-01T22:00:00Z"
 }
 ```
 
@@ -278,14 +284,19 @@ A API será inicializada na porta `5000`:
 }
 ```
 - **Status de Sucesso:** `201 Created`
-- **Header Location retornado:** `http://localhost:5000/api/projetos/4`
+- **Header Location:** `http://localhost:5000/api/projetos/4`
 - **Exemplo de Resposta:**
 ```json
 {
-  "id": 4,
-  "nomeDoProjeto": "Sistema de Gestão de Frotas Elétricas",
-  "area": "Transporte Sustentável",
-  "status": true
+  "sucesso": true,
+  "mensagem": "Projeto cadastrado com sucesso!",
+  "dados": {
+    "id": 4,
+    "nomeDoProjeto": "Sistema de Gestão de Frotas Elétricas",
+    "area": "Transporte Sustentável",
+    "status": true
+  },
+  "dataHora": "2026-11-01T22:00:00Z"
 }
 ```
 
@@ -293,22 +304,30 @@ A API será inicializada na porta `5000`:
 
 ### 4. Atualizar Projeto existente (PUT)
 - **Método:** `PUT`
-- **URL:** `http://localhost:5000/api/projetos/4`
+- **URL:** `http://localhost:5000/api/projetos/1`
 - **Headers:** `Content-Type: application/json`
 - **Corpo da Requisição (Body):**
 ```json
 {
-  "id": 4,
-  "nomeDoProjeto": "Sistema de Gestão de Frotas Elétricas - Expansão",
-  "area": "Mobilidade Urbana",
-  "status": false
+  "id": 1,
+  "nomeDoProjeto": "Portal Educacional Conectado - Versão 2.0",
+  "area": "Tecnologia e Inovação",
+  "status": true
 }
 ```
-- **Status de Sucesso:** `204 No Content`
-- **Se o ID não existir (`404 Not Found`):**
+- **Status de Sucesso:** `200 OK`
+- **Exemplo de Resposta:**
 ```json
 {
-  "mensagem": "Projeto com ID 4 não foi encontrado para atualização."
+  "sucesso": true,
+  "mensagem": "Projeto atualizado com sucesso!",
+  "dados": {
+    "id": 1,
+    "nomeDoProjeto": "Portal Educacional Conectado - Versão 2.0",
+    "area": "Tecnologia e Inovação",
+    "status": true
+  },
+  "dataHora": "2026-11-01T22:00:00Z"
 }
 ```
 
@@ -316,28 +335,129 @@ A API será inicializada na porta `5000`:
 
 ### 5. Deletar Projeto (DELETE)
 - **Método:** `DELETE`
-- **URL:** `http://localhost:5000/api/projetos/4`
-- **Status de Sucesso:** `204 No Content`
-- **Se o ID não existir (`404 Not Found`):**
+- **URL:** `http://localhost:5000/api/projetos/3`
+- **Status de Sucesso:** `200 OK`
+- **Exemplo de Resposta:**
 ```json
 {
-  "mensagem": "Projeto com ID 4 não foi encontrado para exclusão."
+  "sucesso": true,
+  "mensagem": "Projeto removido com sucesso!",
+  "dados": {
+    "idRemovido": 3
+  },
+  "dataHora": "2026-11-01T22:00:00Z"
 }
 ```
 
 ---
 
+## 🛡️ Atendimento aos Requisitos Avaliativos do SENAI
+
+### 1. Mensagens de Sucesso Padronizadas (6,0 Pontos)
+A API implementa a classe genérica `ApiResponse<T>`, padronizando todas as respostas de sucesso com as propriedades:
+- `sucesso` (`bool`): Indica o êxito da requisição.
+- `mensagem` (`string`): Texto amigável e específico da ação realizada.
+- `dados` (`T`): Entidade ou coleção retornada.
+- `dataHora` (`DateTime`): Timestamp UTC da resposta.
+
+**Exemplos de mensagens de sucesso configuradas:**
+1. **Cadastro (`POST` - 201 Created):** `"Projeto cadastrado com sucesso!"`
+2. **Atualização (`PUT` - 200 OK):** `"Projeto atualizado com sucesso!"`
+3. **Exclusão (`DELETE` - 200 OK):** `"Projeto removido com sucesso!"`
+4. **Listagem (`GET` - 200 OK):** `"Projetos listados com sucesso."`
+5. **Busca por ID (`GET` - 200 OK):** `"Projeto localizado com sucesso."`
+
+---
+
+### 2. Mensagens de Retorno de Erro com Códigos HTTP Adequados (8,0 Pontos)
+Todas as respostas de erro utilizam a classe padronizada `ApiErrorResponse` (`sucesso`, `status`, `erro`, `mensagem`, `detalhes`, `dataHora`), cobrindo com precisão semântica os seguintes códigos HTTP:
+
+| Código HTTP | Cenário de Aplicação | Mensagem de Retorno |
+|---|---|---|
+| **`400 Bad Request`** | Parâmetros inválidos (ex: ID ≤ 0), incompatibilidade de ID entre URL e corpo, ou falha de validação de modelo (`ModelState`). | `"Os dados fornecidos para o projeto são inválidos."` ou `"O identificador informado na URL deve ser maior que zero."` |
+| **`404 Not Found`** | Tentativa de consultar, alterar ou excluir um projeto com ID inexistente no banco. | `"Projeto com ID {id} não foi encontrado no sistema."` |
+| **`409 Conflict`** | Tentativa de cadastrar ou renomear um projeto com nome já existente (regra de unicidade). | `"Já existe um projeto cadastrado com o nome '{nome}'."` |
+| **`500 Internal Server Error`** | Falhas inesperadas de servidor ou indisponibilidade de infraestrutura capturadas pelo bloco genérico. | `"Ocorreu um erro interno inesperado ao processar a operação no servidor."` |
+
+---
+
+### 3. Lançamento, Captura e Tratamento de Exceções (8,0 Pontos)
+Foram implementadas classes de exceções personalizadas em [`Exceptions/`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Exceptions) que representam falhas de domínio e negócio:
+
+1. **`ProjetoDuplicadoException`**:
+   - **Lançamento (`throw`):** Ocorre no repositório ([`ProjetoRepository.cs`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Repositories/ProjetoRepository.cs)) durante o cadastro ou alteração, ao constatar que já existe projeto com o mesmo nome:
+     ```csharp
+     if (duplicado)
+     {
+         throw new ProjetoDuplicadoException($"Já existe um projeto cadastrado com o nome '{projeto.NomeDoProjeto}'.");
+     }
+     ```
+   - **Captura (`catch`) e Tratamento:** No controlador ([`ProjetosController.cs`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Controllers/ProjetosController.cs)), a exceção é capturada e tratada retornando `409 Conflict` com corpo formatado:
+     ```csharp
+     catch (ProjetoDuplicadoException ex)
+     {
+         return Conflict(new ApiErrorResponse
+         {
+             Status = StatusCodes.Status409Conflict,
+             Erro = "Conflito de Dados",
+             Mensagem = ex.Message
+         });
+     }
+     ```
+
+2. **`ProjetoNaoEncontradoException`**:
+   - **Lançamento (`throw`):** Ocorre no repositório ([`ProjetoRepository.cs`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Repositories/ProjetoRepository.cs)) ao tentar buscar, atualizar ou deletar um projeto cujo ID não existe:
+     ```csharp
+     if (projetoExistente == null)
+     {
+         throw new ProjetoNaoEncontradoException($"Projeto com ID {id} não foi encontrado.");
+     }
+     ```
+   - **Captura (`catch`) e Tratamento:** No controlador ([`ProjetosController.cs`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Controllers/ProjetosController.cs)), é capturada e tratada retornando `404 Not Found`:
+     ```csharp
+     catch (ProjetoNaoEncontradoException ex)
+     {
+         return NotFound(new ApiErrorResponse
+         {
+             Status = StatusCodes.Status404NotFound,
+             Erro = "Não Encontrado",
+             Mensagem = ex.Message
+         });
+     }
+     ```
+
+3. **`DadosInvalidosException`**:
+   - **Lançamento (`throw`):** Lançada ao identificar parâmetros fora dos limites aceitos (ex: `id <= 0`).
+   - **Captura (`catch`) e Tratamento:** Retorna `400 Bad Request` com a mensagem explicativa.
+
+---
+
+### 4. Semântica e Sintaxe Adequadas (4,0 Pontos)
+- **Código C# 12 / .NET 8:** Organizado segundo os padrões de projeto da Microsoft (nomenclatura PascalCase/camelCase, injeção de dependências, separação de camadas).
+- **Anotações Swagger:** Todos os métodos do controlador possuem documentação XML e anotações `[ProducesResponseType]` com os tipos e códigos HTTP exatos.
+- **Compilação Limpa:** Projeto compila com **0 erros e 0 avisos (warnings)**.
+
+---
+
 ## 🧪 Formas de Testar a API
 
-### Opção 1: Via Swagger UI (Navegador)
+### Opção 1: Via Coleção Oficial do Postman
+O repositório inclui a coleção completa pronta para importação no arquivo [`ExoApi.postman_collection.json`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/ExoApi.postman_collection.json):
+1. No **Postman**, clique em **Import** (ou `Ctrl + O`).
+2. Selecione o arquivo `ExoApi.postman_collection.json`.
+3. A coleção estará organizada com 10 requisições categorizadas em:
+   - **🟢 Cenários de Sucesso:** Listar (`200 OK`), Buscar por ID (`200 OK`), Cadastrar (`201 Created`), Atualizar (`200 OK`), Deletar (`200 OK`).
+   - **🔴 Cenários de Erro e Exceções:** Dados Inválidos (`400 Bad Request`), ID Inválido (`400 Bad Request`), ID Divergente (`400 Bad Request`), Projeto Não Encontrado (`404 Not Found`), Projeto Duplicado (`409 Conflict`).
+
+### Opção 2: Via Swagger UI (Navegador)
 Inicie a aplicação e abra:
 👉 **[http://localhost:5000/](http://localhost:5000/)**  
-O Swagger disponibiliza uma interface gráfica onde é possível executar qualquer um dos 5 métodos HTTP e visualizar respostas e headers em tempo real.
+O Swagger exibe todos os endpoints, modelos de retorno (`ApiResponse`, `ApiErrorResponse`) e códigos de status HTTP mapeados.
 
-### Opção 2: Via Arquivo `.http` (VS Code / Visual Studio)
-O projeto acompanha o arquivo [`Exo.WebApi.http`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Exo.WebApi.http) com todas as requisições configuradas. Basta clicar em **"Send Request"** sobre qualquer uma das operações.
+### Opção 3: Via Arquivo `.http` (VS Code / Visual Studio)
+O arquivo [`Exo.WebApi.http`](file:///c:/Users/Asus/Desktop/API_SENAI_NTERACAO/Projeto-ExoApi/Exo.WebApi.http) contém requisições prontas com link de execução direta (`Send Request`) no editor.
 
-### Opção 3: Via PowerShell ou cURL
+### Opção 4: Via PowerShell ou cURL
 ```powershell
 # Listar todos os projetos
 Invoke-RestMethod -Uri "http://localhost:5000/api/projetos" -Method Get
@@ -345,17 +465,7 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/projetos" -Method Get
 
 ---
 
-## 🎯 Alinhamento com os Critérios de Avaliação do SENAI
-
-| Critério de Avaliação | Peso | Atendimento no Projeto |
-|---|:---:|---|
-| **Preparação do Ambiente de Desenvolvimento** | 5,0 pts | Ambiente configurado com .NET 8 SDK, SQL Server Express, Entity Framework Core e bibliotecas necessárias funcionando perfeitamente. |
-| **Criação do Projeto e Estrutura em Camadas** | 8,0 pts | Arquitetura em camadas implementada (`Controllers`, `Interfaces`, `Repositories`, `Models`, `Contexts`), desacoplada com injeção de dependência e inversão de controle. |
-| **Implementação dos Métodos HTTP (GET, POST, PUT, DELETE)** | 14,0 pts | Todos os 5 métodos do CRUD implementados e testados com sucesso no banco de dados, utilizando códigos de status semânticos (200, 201, 204, 400, 404). |
-| **Semântica, Sintaxe e Boas Práticas** | 6,0 pts | Código C# limpo e sem warnings, tipagem segura, tratamento de exceções com `try/catch`, validação via `ModelState`, `.gitignore` adequado e documentação detalhada. |
-
----
-
 ## 👤 Autor
 Desenvolvido por **Carlos Daniel** para o curso técnico do **SENAI**.  
 Repositório Oficial: **[https://github.com/Carlos-niell/Exo-api](https://github.com/Carlos-niell/Exo-api)**
+
