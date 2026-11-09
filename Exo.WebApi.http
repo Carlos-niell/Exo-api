@@ -1,22 +1,87 @@
 @Exo.WebApi_HostAddress = http://localhost:5000
+@TokenAdmin = COLE_AQUI_O_TOKEN_GERADO_NO_LOGIN_ADMIN
+@TokenComum = COLE_AQUI_O_TOKEN_GERADO_NO_LOGIN_COMUM
 
 ###############################################################################
-### CENÁRIOS DE SUCESSO (Mensagens Padronizadas e Status HTTP Adequados)
+### 1. AUTENTICAÇÃO E AUTORIZAÇÃO (JWT - Desafio 2 SENAI)
 ###############################################################################
 
-### 1. Listar todos os Projetos (GET) -> 200 OK
+### 1.1. Login com Usuário Administrador (Com Permissão de Exclusão) -> 200 OK
+# @name loginAdmin
+POST {{Exo.WebApi_HostAddress}}/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "admin@exoapi.com",
+  "senha": "admin123"
+}
+
+###
+
+### 1.2. Login com Usuário Comum (Autenticado, porém Sem Permissão de Exclusão) -> 200 OK
+# @name loginComum
+POST {{Exo.WebApi_HostAddress}}/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "usuario@exoapi.com",
+  "senha": "user123"
+}
+
+###
+
+### 1.3. Erro de Autenticação (401 Unauthorized) - Credenciais Inválidas no Login
+POST {{Exo.WebApi_HostAddress}}/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "admin@exoapi.com",
+  "senha": "senha_incorreta"
+}
+
+###
+
+### 1.4. Bloqueio de Exclusão Sem Token JWT -> 401 Unauthorized
+# Tentativa de deletar projeto sem estar autenticado (sem cabeçalho Authorization)
+DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
+Accept: application/json
+
+###
+
+### 1.5. Bloqueio de Exclusão Sem Permissão (Perfil Comum) -> 403 Forbidden
+# Usuário autenticado, porém sem perfil Admin exigido pelo atributo [Authorize(Roles = "Admin")]
+DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
+Authorization: Bearer {{TokenComum}}
+Accept: application/json
+
+###
+
+### 1.6. Exclusão Autorizada com Token JWT Admin -> 200 OK
+# Usuário autenticado e autorizado com perfil Admin
+DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
+Authorization: Bearer {{TokenAdmin}}
+Accept: application/json
+
+###
+
+
+###############################################################################
+### 2. ENDPOINTS DE PROJETOS (CRUD)
+###############################################################################
+
+### 2.1. Listar todos os Projetos (GET) -> 200 OK
 GET {{Exo.WebApi_HostAddress}}/api/projetos
 Accept: application/json
 
 ###
 
-### 2. Buscar Projeto por ID (GET) -> 200 OK
+### 2.2. Buscar Projeto por ID (GET) -> 200 OK
 GET {{Exo.WebApi_HostAddress}}/api/projetos/1
 Accept: application/json
 
 ###
 
-### 3. Cadastrar novo Projeto (POST) -> 201 Created
+### 2.3. Cadastrar novo Projeto (POST) -> 201 Created
 POST {{Exo.WebApi_HostAddress}}/api/projetos
 Content-Type: application/json
 
@@ -28,7 +93,7 @@ Content-Type: application/json
 
 ###
 
-### 4. Atualizar Projeto existente (PUT) -> 200 OK
+### 2.4. Atualizar Projeto existente (PUT) -> 200 OK
 PUT {{Exo.WebApi_HostAddress}}/api/projetos/1
 Content-Type: application/json
 
@@ -41,15 +106,45 @@ Content-Type: application/json
 
 ###
 
-### 5. Deletar Projeto por ID (DELETE) -> 200 OK
-DELETE {{Exo.WebApi_HostAddress}}/api/projetos/3
+
+###############################################################################
+### 3. ENDPOINTS DE USUÁRIOS (CRUD)
+###############################################################################
+
+### 3.1. Listar todos os Usuários (GET) -> 200 OK
+GET {{Exo.WebApi_HostAddress}}/api/usuarios
+Accept: application/json
+
+###
+
+### 3.2. Buscar Usuário por ID (GET) -> 200 OK
+GET {{Exo.WebApi_HostAddress}}/api/usuarios/1
+Accept: application/json
+
+###
+
+### 3.3. Cadastrar novo Usuário (POST) -> 201 Created
+POST {{Exo.WebApi_HostAddress}}/api/usuarios
+Content-Type: application/json
+
+{
+  "email": "novo.admin@exoapi.com",
+  "senha": "123456",
+  "perfil": "Admin"
+}
+
+###
+
+### 3.4. Deletar Usuário por ID (DELETE - Requer Token Admin) -> 200 OK
+DELETE {{Exo.WebApi_HostAddress}}/api/usuarios/3
+Authorization: Bearer {{TokenAdmin}}
 Accept: application/json
 
 ###
 
 
 ###############################################################################
-### CENÁRIOS DE ERRO E EXCEÇÃO (Códigos HTTP e Tratamentos Específicos)
+### 4. CENÁRIOS DE ERRO E EXCEÇÃO (400, 404, 409)
 ###############################################################################
 
 ### ERRO 1 (HTTP 400 Bad Request) - Dados Inválidos (Campos Obrigatórios Ausentes)
@@ -84,14 +179,12 @@ Content-Type: application/json
 ###
 
 ### ERRO 4 (HTTP 404 Not Found) - Exceção ProjetoNaoEncontradoException
-# Busca por ID que não existe no banco de dados
 GET {{Exo.WebApi_HostAddress}}/api/projetos/9999
 Accept: application/json
 
 ###
 
 ### ERRO 5 (HTTP 409 Conflict) - Exceção ProjetoDuplicadoException
-# Tentativa de cadastrar projeto com nome já existente no sistema
 POST {{Exo.WebApi_HostAddress}}/api/projetos
 Content-Type: application/json
 

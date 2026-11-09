@@ -1,6 +1,7 @@
 using Exo.WebApi.Exceptions;
 using Exo.WebApi.Interfaces;
 using Exo.WebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -306,16 +307,22 @@ namespace Exo.WebApi.Controllers
 
         /// <summary>
         /// Remove um projeto do sistema pelo seu identificador único (ID).
+        /// Restrito exclusivamente a usuários autenticados e autorizados (perfil Admin).
         /// </summary>
         /// <param name="id">ID do projeto a ser deletado.</param>
         /// <returns>Mensagem de sucesso na remoção.</returns>
         /// <response code="200">Projeto removido com sucesso.</response>
         /// <response code="400">Identificador inválido (menor ou igual a zero).</response>
+        /// <response code="401">Usuário não autenticado (Token JWT ausente, inválido ou expirado).</response>
+        /// <response code="403">Usuário autenticado, porém sem permissão para excluir registros.</response>
         /// <response code="404">Projeto não encontrado para exclusão.</response>
         /// <response code="500">Erro interno inesperado no servidor.</response>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
         public IActionResult Deletar(int id)

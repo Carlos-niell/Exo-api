@@ -14,6 +14,7 @@ namespace Exo.WebApi.Contexts
         }
 
         public DbSet<Projeto> Projetos { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -33,6 +34,16 @@ namespace Exo.WebApi.Contexts
                 entity.Property(e => e.NomeDoProjeto).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.Area).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired();
+            });
+
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.ToTable("Usuarios");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
+                entity.Property(e => e.Senha).IsRequired().HasMaxLength(150);
+                entity.Property(e => e.Perfil).IsRequired().HasMaxLength(50).HasDefaultValue("Admin");
             });
 
             base.OnModelCreating(modelBuilder);

@@ -1,13 +1,209 @@
 {
 	"info": {
 		"_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
-		"name": "ExoApi - SENAI (Projetos)",
-		"description": "Coleção completa de testes para a API ExoApi no Postman, contendo fluxos de sucesso (200, 201) e testes de erro/exceção (400, 404, 409, 500).",
+		"name": "ExoApi - SENAI (Projetos + Segurança JWT)",
+		"description": "Coleção completa de testes para a API ExoApi no Postman, contendo Autenticação e Autorização JWT (200, 401, 403), CRUD de Projetos e Usuários, e testes de exceções (400, 404, 409).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "🟢 Cenários de Sucesso",
+			"name": "🔐 1. Autenticação e Autorização (JWT)",
+			"item": [
+				{
+					"name": "1.1. Login Admin (Gera e Salva Token JWT automaticamente)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwtToken\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@exoapi.com\",\n  \"senha\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/usuarios/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"login"
+							]
+						},
+						"description": "Autentica o usuário Administrador e salva automaticamente o token JWT na variável {{jwtToken}} da coleção."
+					},
+					"response": []
+				},
+				{
+					"name": "1.2. Login Usuário Comum (Sem Permissão de Exclusão)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwtTokenComum\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"usuario@exoapi.com\",\n  \"senha\": \"user123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/usuarios/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"login"
+							]
+						},
+						"description": "Autentica um usuário de perfil Comum e salva o token em {{jwtTokenComum}}."
+					},
+					"response": []
+				},
+				{
+					"name": "1.3. Deletar Projeto SEM Token (Bloqueado -> 401 Unauthorized)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"3"
+							]
+						},
+						"description": "Valida que usuários não autenticados recebem 401 Unauthorized ao tentar excluir um projeto."
+					},
+					"response": []
+				},
+				{
+					"name": "1.4. Deletar Projeto com Usuário Comum (Bloqueado -> 403 Forbidden)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtTokenComum}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"3"
+							]
+						},
+						"description": "Valida que um usuário autenticado porém sem perfil Admin recebe 403 Forbidden ao tentar excluir um projeto."
+					},
+					"response": []
+				},
+				{
+					"name": "1.5. Deletar Projeto COM Token Admin (Autorizado -> 200 OK)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projetos/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"3"
+							]
+						},
+						"description": "Remove o projeto utilizando o token JWT do usuário autenticado e autorizado (Admin)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🟢 2. Projetos - Cenários de Sucesso",
 			"item": [
 				{
 					"name": "1. Listar todos os Projetos (GET 200)",
@@ -134,8 +330,18 @@
 					"response": []
 				},
 				{
-					"name": "5. Deletar Projeto por ID (DELETE 200)",
+					"name": "5. Deletar Projeto por ID (DELETE 200 - Com Token JWT)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -154,14 +360,74 @@
 								"3"
 							]
 						},
-						"description": "Remove um projeto pelo ID retornando 200 OK."
+						"description": "Remove um projeto pelo ID retornando 200 OK (requer token JWT válido)."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "🔴 Cenários de Erro e Exceções",
+			"name": "👤 3. Usuários - Gerenciamento",
+			"item": [
+				{
+					"name": "3.1. Listar todos os Usuários (GET 200)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.2. Cadastrar novo Usuário (POST 201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"novo.usuario@exoapi.com\",\n  \"senha\": \"123456\",\n  \"perfil\": \"Admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔴 4. Cenários de Erro e Exceções",
 			"item": [
 				{
 					"name": "1. Erro 400 - Campos Obrigatórios Vazios",
@@ -332,6 +598,16 @@
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jwtTokenComum",
+			"value": "",
 			"type": "string"
 		}
 	]
